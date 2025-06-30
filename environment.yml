@@ -1,0 +1,18 @@
+name: numbless-project
+channels:
+  - conda-forge
+  - bioconda
+  - vacation
+dependencies:
+  - scikit-optimize
+  - numpy
+  - matplotlib
+  - scikit-survival
+  - python=3.12
+  - scikit-learn
+  - pandas
+  - conda-lock
+  - ipykernel
+  - openpyxl
+  - pandera
+prefix: /Users/tucos/opt/anaconda3/envs/numbless-project

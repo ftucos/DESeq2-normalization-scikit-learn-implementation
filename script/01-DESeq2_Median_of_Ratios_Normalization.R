@@ -19,10 +19,9 @@
 
 # 0. Setup
 # ------------------------------
-setwd("~/Documents/test_counts_scaling/")
 library(DESeq2)
 
-set.seed(123)                                # ensure reproducibility
+set.seed(17)                                 # ensure reproducibility
 source("R/custom_estimate_size_factors.R")   # custom version of estimateSizeFactorsForMatrix()
 
 
@@ -58,6 +57,8 @@ colnames(count_matrix) <- names(library_sizes)
 # Inspect simulated data -------------------------------------------------
 counts_df   <- as.data.frame(count_matrix)
 
+write.csv(counts_df, "data/simulated_counts.csv", row.names = TRUE)
+
 total_counts <- colSums(counts_df)
 summary_df   <- data.frame(Sample      = names(library_sizes),
                            LibrarySize = library_sizes,
@@ -69,7 +70,7 @@ print(summary_df)   # quick sanity‑check
 # 2. Train / test split
 # ------------------------------
 counts_train <- count_matrix[, 1:10]  # training set
-counts_test  <- count_matrix[, 10:20] # test set
+counts_test  <- count_matrix[, 11:20] # test set
 
 # ------------------------------
 # 3. Normalise the training set (median‑ratio method)
@@ -82,13 +83,19 @@ counts_test  <- count_matrix[, 10:20] # test set
 # ratio is the default approach that excludes from normalization all genes with 0 count in at least one sample
 # poscounts instead handles zeros by ignoring them in the log geometric mean calculation
 size_factors_train <- custom_estim_size_factors(counts_train, type = "ratio")
-size_factors_train                               
+size_factors_train
+# export them in results
+write.csv(data.frame(Sample = names(size_factors_train),
+                      SizeFactor = size_factors_train),
+          "data/size_factors_train.csv", row.names = FALSE)
 
 # Geometric mean of size factors (should be close but not necessary one)
 exp(mean(log(size_factors_train)))
 
 # 3.1 Apply normalisation: counts_ij / size_factor_j
 norm_counts_train <- t(t(counts_train) / size_factors_train)
+write.csv(as.data.frame(norm_counts_train),
+          "data/norm_counts_train.csv", row.names = TRUE)
 
 colSums(norm_counts_train)  # library sizes now comparable across samples
 
@@ -135,12 +142,17 @@ size_factors_test <- custom_estim_size_factors(counts_test,
                                                type     = "ratio",
                                                geoMeans = reference_pseudosample)
 size_factors_test
+write.csv(data.frame(Sample = names(size_factors_test),
+                     SizeFactor = size_factors_test),
+          "data/size_factors_test.csv", row.names = FALSE)
 
 # Geometric mean will again differ from 1 (as expected)
 exp(mean(log(size_factors_test)))
 
 # Apply normalisation to the test counts
 norm_counts_test <- t(t(counts_test) / size_factors_test)
+write.csv(as.data.frame(norm_counts_test),
+          "data/norm_counts_test.csv", row.names = TRUE)
 
 cat("Test Samples normalized library sizes:\n")
 colSums(norm_counts_test)  # should be comparable to training libraries
